@@ -71,4 +71,12 @@
         cidr_block: "{{ vpc_cidr }}"
         name: "{{ vpc_name }}"
         state: absent
+        
+    - name: Delete S3 bucket
+      s3_bucket:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ bucket_name }}"
+        force: true
+        state: absent
     
