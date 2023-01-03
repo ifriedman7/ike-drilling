@@ -53,10 +53,6 @@
             to_port: 22
             cidr_ip: 0.0.0.0/0
           - proto: tcp
-            from_port: 80
-            to_port: 80
-            cidr_ip: 0.0.0.0/0
-          - proto: tcp
             from_port: 37529
             to_port: 37529
             cidr_ip: 0.0.0.0/0
@@ -155,3 +151,134 @@
   #      tags: "{{ infra_tags }}"
       register: elb
 
+- hosts: remote
+  remote_user: maintuser
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  vars_files:
+    - vars.yml
+    - aws_keys.yml
+  tasks:
+    - name: "Download EPEL RPM"
+      get_url:
+        url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        dest: ./epel-release-latest-7.noarch.rpm
+        mode: 0644
+    - name: Install epel-release 
+      shell: 
+        cmd: sudo rpm -Uvh --replacepkgs ./epel-release-latest-7.noarch.rpm
+        warn: false
+
+    - name: Install docker prerequisites
+      yum:
+        name: 
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - epel-release
+          - libcurl-devel
+          - python
+          - python-devel
+          - python3-devel
+          - python-pip
+          - python2-pip
+          - python-setuptools
+          - nginx
+          - git
+          - libselinux-python
+          - python3
+          - python3-pip
+          - libselinux-python3
+          - python-virtualenv
+        state: present
+        update_cache: yes
+        enablerepo: epel
+        skip_broken: yes
+    - name: Upgrade all packages
+      yum:
+        name: 
+          - '*'
+        state: latest
+    - name: Add Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/centos/gpg
+        dest: /etc/yum.repos.d/docker-gpg
+        mode: 0644
+
+    - name: Configuring docker-ce repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: 0644
+    - name: Install Docker packages
+      yum:
+        name: ['docker-ce','docker-ce-cli']
+        state: present
+    - name: Starting and Enabling Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker-compose 
+      shell: 
+        cmd: curl -L "https://github.com/docker/compose/releases/download/2.3.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        warn: false
+
+
+    - name: Pip setup for python3
+      pip:
+        name:
+          - docker
+          - docker-compose
+        state: latest  
+        executable: /usr/bin/pip3
+    - name: Copy IFotos folder to node
+      copy:
+        src: IFotos/
+        dest: /home/{{ user }}/{{ app_name }}
+
+    - name: Copy IFotos-db folder to node
+      copy:
+        src: IFotos-db/
+        dest: /home/{{ user }}/IFotos-db
+
+    - name: Create network db
+      shell:
+        cmd: docker network create db
+        warn: false
+
+    - name: Build and Run the ifotosdb container
+      shell:
+        cmd: cd IFotos-db && docker build --build-arg AWSACCESSKEYID={{ aws_access_key }} --build-arg AWSSECRETACCESSKEY={{ aws_secret_key }} --no-cache -t ifotosdb . && docker run -p 3306:3306 --net db --name ifotosdb --device /dev/fuse --privileged --detach ifotosdb
+        warn: false
+
+    - name: Build and Run the ifotos app container
+      shell:
+        cmd: cd IFotos && docker build --no-cache -t ifotos . && docker run -p 3000:3000 --net db --name ifotos --detach ifotos
+        warn: false
+
+- hosts: local
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars.yml  
+    - aws_keys.yml
+  tasks:
+    - name: elb target
+      elb_target:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        state: present
+        target_group_name: "{{ target_group }}"
+        region: "{{ region }}"
+        target_id: "{{ item.instance_id }}"
+        target_port: 3000
+      loop: "{{ ec2.instances }}"
+    - name: Check that application is reachable through ELB
+      uri:
+        url: "http://{{ elb.dns_name }}:80"
+
+    - debug:
+        msg: "Website reachable on http://{{ elb.dns_name }}:80"
