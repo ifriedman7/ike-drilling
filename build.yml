@@ -19,7 +19,7 @@
     - name: associate subnet to the VPC
       ec2_vpc_subnet:
         state: present
-        vpc_id: "{{ vpc_id }}"
+        vpc_id: "{{ vpc.id }}"
         region: "{{ region }}"
         cidr: "{{ subnet_cidr }}"
         aws_access_key: "{{ aws_access_key }}"
@@ -31,7 +31,7 @@
  
     - name: create IGW
       ec2_vpc_igw:
-        vpc_id: "{{ vpc_id }}"
+        vpc_id: "{{ vpc.id }}"
         region: "{{ region }}"
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
@@ -77,7 +77,7 @@
         protocol: http
         port: 80
         region: "{{ region }}"
-        vpc_id: "{{ vpc_id }}"
+        vpc_id: "{{ vpc.id }}"
         state: present
       register: tg
 

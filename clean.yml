@@ -11,6 +11,7 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         region: "{{ region }}"
+        cidr_block: "{{ vpc_cidr }}"
         name: "{{ vpc_name }}"
         state: absent
     
