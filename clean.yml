@@ -38,7 +38,7 @@
         state: absent
         
     - name: Delete security group
-      ec2_security_group:
+      ec2_group:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         name: "{{ security_group }}"
