@@ -45,6 +45,7 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         name: "{{ security_group }}"
+        vpc_id: "{{ vpc.vpc.id }}"
         description: "{{ security_group }}"
         region: "{{ region }}"
         rules:
@@ -68,12 +69,19 @@
           - proto: all
             cidr_ip: 0.0.0.0/0
       register: sg
-
+      
+    - name: Create S3 bucket
+      s3_bucket:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ bucket_name }}"
+      
     - name: Launch new EC2 instances
       ec2_instance:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         name: "{{ instance_name }}"
+        vpc_subnet_id: "{{ subnet.subnet.id }}"
         network:
           groups: 
           - "{{ sg.group_id }}"
