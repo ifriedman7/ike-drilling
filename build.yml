@@ -69,18 +69,6 @@
             cidr_ip: 0.0.0.0/0
       register: sg
 
-    - name: Create the ELB target group
-      elb_target_group:
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        name: "{{ target_group }}"
-        protocol: http
-        port: 80
-        region: "{{ region }}"
-        vpc_id: "{{ vpc.vpc.id }}"
-        state: present
-      register: tg
-
     - name: Launch new EC2 instances
       ec2_instance:
         aws_access_key: "{{ aws_access_key }}"
@@ -116,42 +104,5 @@
         timeout: 120
       loop: "{{ ec2.instances }}"
 
-    - name: elb target
-      elb_target:
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        state: present
-        target_group_name: "{{ target_group }}"
-        region: "{{ region }}"
-        target_id: "{{ item.instance_id }}"
-        target_port: 37529
-      loop: "{{ ec2.instances }}"
 
-    - name: Create the ELB listening on port 80 to 3000 was elb_classic_lb
-      elb_application_lb:
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        name: "{{ load_balancer }}"
-        state: present
-        region: "{{ region }}"
-        listeners:
-          - Protocol: HTTP
-            Port: 80
-            DefaultActions:
-              - Type: forward # Required. Only 'forward' is accepted at this time
-                TargetGroupArn: "{{ tg.target_group_arn }}" # Required. The ARN of the target group
-        security_groups:
-        - "{{ sg.group_id }}"
-        subnets:
-        - "{{ subnet.id }}"
-  #      health_check:
-  #        ping_protocol: http
-  #        ping_port: 80
-  #        ping_path: "/"
-  #        response_timeout: 5
-  #        interval: 10
-  #        unhealthy_threshold: 10
-  #        healthy_threshold: 2
-  #      tags: "{{ infra_tags }}"
-      register: elb
 

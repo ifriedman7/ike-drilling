@@ -29,13 +29,6 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         
-    - name: Delete the ELB target group
-      elb_target_group:
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        name: "{{ target_group }}"
-        region: "{{ region }}"
-        state: absent
         
     - name: Delete security group
       ec2_group:
