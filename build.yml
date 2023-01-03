@@ -35,13 +35,13 @@
         region: "{{ region }}"
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
-        state: "present"
+        state: present
         tags:
           name: "{{ igw_name }}"
       register: igw
     
     - name: Create security group for EC2
-      ec2_group:
+      ec2_security_group:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         name: "{{ security_group }}"
@@ -81,7 +81,7 @@
         state: present
       register: tg
 
-    - name: Launch new EC2 instances Upgrade to "ec2_instance" module
+    - name: Launch new EC2 instances
       ec2_instance:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
