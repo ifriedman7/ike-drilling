@@ -20,7 +20,8 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         region: "{{ region }}"
-        filters: "{{ filters }}"
+        filters: 
+          "tag:Name": "{{ vpc_name }}"
       register: vpcs
       
     - name: Terminate drilling EC2
