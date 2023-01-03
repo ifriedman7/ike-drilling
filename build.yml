@@ -42,6 +42,8 @@
     - name: ec2_vpc_subnet_info
       ec2_vpc_subnet_info:
         region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
         filters:
           vpc-id: "{{ vpc.vpc.id }}"
       register: ec2_vpc_subnet_info
