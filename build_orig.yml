@@ -234,6 +234,9 @@
           - docker-compose
         state: latest  
         executable: /usr/bin/pip3
+        
+        
+        
     - name: Copy IFotos folder to node
       copy:
         src: IFotos/

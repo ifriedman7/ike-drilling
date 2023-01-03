@@ -137,5 +137,89 @@
         timeout: 120
       loop: "{{ ec2.instances }}"
 
+- hosts: remote
+  remote_user: maintuser
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  vars_files:
+    - vars.yml
+    - aws_keys.yml
+  tasks:
+    - name: "Download EPEL RPM"
+      get_url:
+        url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        dest: ./epel-release-latest-7.noarch.rpm
+        mode: 0644
+    - name: Install epel-release 
+      shell: 
+        cmd: sudo rpm -Uvh --replacepkgs ./epel-release-latest-7.noarch.rpm
+        warn: false
 
+    - name: Install docker prerequisites
+      yum:
+        name: 
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - epel-release
+          - libcurl-devel
+          - python
+          - python-devel
+          - python3-devel
+          - python-pip
+          - python2-pip
+          - python-setuptools
+          - nginx
+          - git
+          - s3fs-fuse
+          - fuse
+          - libselinux-python
+          - python3
+          - python3-pip
+          - libselinux-python3
+          - python-virtualenv
+        state: present
+        update_cache: yes
+        enablerepo: epel
+        skip_broken: yes
+    - name: Upgrade all packages
+      yum:
+        name: 
+          - '*'
+        state: latest
+    - name: Add Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/centos/gpg
+        dest: /etc/yum.repos.d/docker-gpg
+        mode: 0644
+
+    - name: Configuring docker-ce repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: 0644
+    - name: Install Docker packages
+      yum:
+        name: ['docker-ce','docker-ce-cli']
+        state: present
+    - name: Starting and Enabling Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker-compose 
+      shell: 
+        cmd: curl -L "https://github.com/docker/compose/releases/download/2.3.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        warn: false
+
+    - name: Pip setup for python3
+      pip:
+        name:
+          - docker
+          - docker-compose
+        state: latest  
+        executable: /usr/bin/pip3
+        
 
