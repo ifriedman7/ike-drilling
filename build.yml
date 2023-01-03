@@ -41,6 +41,7 @@
       register: igw
     - name: ec2_vpc_subnet_info
       ec2_vpc_subnet_info:
+        region: "{{ region }}"
         filters:
           vpc-id: "{{ vpc.vpc.id }}"
       register: ec2_vpc_subnet_info
