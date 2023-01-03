@@ -32,7 +32,8 @@
         region: "{{ region }}"
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
-        
+        wait: true
+        termination_protection: false
         
     - name: Delete security group
       ec2_group:
@@ -41,6 +42,7 @@
         name: "{{ security_group }}"
         region: "{{ region }}"
         state: absent
+        
         
     - name: Delete IGW
       ec2_vpc_igw:
