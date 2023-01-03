@@ -22,7 +22,7 @@
         region: "{{ region }}"
         filters: 
           "tag:Name": "{{ vpc_name }}"
-      register: vpcs
+      register: vpc_info
       
     - name: Terminate drilling EC2
       ec2_instance:
@@ -43,7 +43,7 @@
         
     - name: Delete IGW
       ec2_vpc_igw:
-        vpc_id: "{{ vpcs.vpcs.id }}"
+        vpc_id: "{{ vpc_info.vpcs.vpc_id }}"
         region: "{{ region }}"
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
