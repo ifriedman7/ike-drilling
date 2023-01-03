@@ -7,7 +7,7 @@ instance_type: t2.micro
 count: 1 # number of EC2 instances
 security_group: SecGroup-drilling # 
 
-image: ami-0d3f1442fb45e08e7 # ami-005f0a3901058a235 # spel-minimal-centos-7-hvm-2021.08.1.x86_64-gp2 #ami-c1cf79bc # 
+image: ami-022058ff835814faa #ami-0d3f1442fb45e08e7 # ami-005f0a3901058a235 # spel minimal centos 7 #ami-c1cf79bc
 keypair: Ike-key1 # EC2 AWS key pair name
 igw_name: igw-drilling
 
