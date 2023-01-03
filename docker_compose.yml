@@ -1,0 +1,45 @@
+version: '3'
+services:
+  read:
+    hostname: read
+    environment: {}
+    ports:
+    - "37528:37528"
+    image: dockerhub.cisco.com/vge-docker-staging/smp:20180315044337-4.0.0-2
+    networks:
+    - vlan
+    volumes:
+    - vgehe-logs:/var/log/nds/smp
+    #- ./log:/opt/nds/smp/log
+    - /var/log/cache/smp:/var/log/cache/smp
+    - ./config:/config
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+  write:
+    hostname: write
+    environment: {}
+    ports:
+    - "37529:37529"
+    image: dockerhub.cisco.com/vge-docker-staging/vxb2:20180315134227-4.0.0-12
+    networks:
+    - vlan
+    volumes:
+    #- vgehe-logs:/var/log/nds/vxb2
+    - ./log:/opt/nds/vxb2/log
+    - ./config:/config
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+
+volumes:
+    # drmhe logs
+    vgehe-logs: {}
+
+networks:
+    vlan:
+       driver: bridge
