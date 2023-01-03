@@ -55,7 +55,15 @@
         state: absent
         tags:
           name: "{{ igw_name }}"
-          
+    - name: Delete route table
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        tags:
+          Name: Internet
+        state: absent
     - name: Delete subnet 
       ec2_vpc_subnet:
         vpc_id: "{{ vpc_info.vpcs[0].vpc_id }}"
