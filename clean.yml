@@ -7,7 +7,7 @@
     - vars.yml
   tasks:
     - name: "Delete VPC"
-      ec2_elb_lb:
+      ec2_vpc_net:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         region: "{{ region }}"
