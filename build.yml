@@ -39,7 +39,26 @@
         tags:
           name: "{{ igw_name }}"
       register: igw
-    
+    - name: ec2_vpc_subnet_info
+      ec2_vpc_subnet_info:
+        filters:
+          vpc-id: "{{ vpc.vpc.id }}"
+      register: ec2_vpc_subnet_info
+      
+    - name: VPC IGW Route Table
+      vars:
+        json: "{{ ec2_vpc_subnet_info }}"
+        query: "subnets[].id"
+        subnets: "{{ json | json_query(query) }}"
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        tags:
+          Name: Internet
+        subnets: "{{ subnets }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+        
     - name: Create security group for EC2
       ec2_group:
         aws_access_key: "{{ aws_access_key }}"
