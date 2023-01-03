@@ -127,7 +127,7 @@
 
     - name: Add EC2 instances to inventory
       add_host:
-        name: "{{ item.public_ip_address }}"
+        name: "{{ item.public_ip }}"
         groups: remote
       loop: "{{ ec2.instances }}"
 
