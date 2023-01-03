@@ -21,9 +21,9 @@
 #        filters: "{{ filters }}"
       register: ec2
       
-    - name: "Terminate drilling EC2"
+    - name: Terminate drilling EC2
       ec2_instance:
-        name: '{{ drilling_instance }}'
+        name: "{{ drilling_instance }}"
         state: absent
         region: "{{ region }}"
         aws_access_key: "{{ aws_access_key }}"
