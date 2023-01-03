@@ -2,6 +2,8 @@
 - hosts: local
   connection: local
   vars:
+    filters:
+      "tag:name": ike-drilling
   vars_files:
     - aws_keys.yml
     - vars.yml
@@ -11,15 +13,15 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         region: "{{ region }}"
-#        filters: "{{ filters }}"
+        filters: "{{ filters }}"
       register: ec2
     - name: "Gather VPC info"
       ec2_vpc_net_info:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         region: "{{ region }}"
-#        filters: "{{ filters }}"
-      register: ec2
+        filters: "{{ filters }}"
+      register: vpcs
       
     - name: Terminate drilling EC2
       ec2_instance:
@@ -40,7 +42,7 @@
         
     - name: Delete IGW
       ec2_vpc_igw:
-        vpc_id: "{{ vpc.vpc.id }}"
+        vpc_id: "{{ vpcs.vpc_id }}"
         region: "{{ region }}"
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
