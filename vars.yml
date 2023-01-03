@@ -10,6 +10,7 @@ security_group: SecGroup_drilling #
 load_balancer: ike-drilling-lb
 image: ami-0d3f1442fb45e08e7 # ami-005f0a3901058a235 # spel-minimal-centos-7-hvm-2021.08.1.x86_64-gp2 #ami-c1cf79bc # 
 keypair: Ike-key1 # EC2 AWS key pair name
+igw_name: igw-drilling
 
 
 target_group: ike-drilling-lb-tg
