@@ -55,6 +55,9 @@
         subnets: "{{ json | json_query(query) }}"
       ec2_vpc_route_table:
         vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
         tags:
           Name: Internet
         subnets: "{{ subnets }}"
