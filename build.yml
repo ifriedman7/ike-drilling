@@ -1,0 +1,344 @@
+---
+- hosts: local
+  connection: local
+  gather_facts: false
+  vars_files:
+    - vars.yml
+    - aws_keys.yml
+  tasks:
+    - name: create VPC
+      ec2_vpc_net:
+        name: "{{ vpc_name }}"
+        cidr_block: "{{ vpc_cidr }}"
+        region: "{{ region }}"
+        state: present
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: vpc
+    
+    - name: associate subnet to the VPC
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ vpc.id }}"
+        region: "{{ region }}"
+        cidr: "{{ subnet_cidr }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        map_public: yes
+        resource_tags:
+          Name: "{{ subnet_name }}"
+      register: subnet
+ 
+    - name: create IGW
+      ec2_vpc_igw:
+        vpc_id: "{{ vpc.id }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        state: "present"
+        tags:
+          Name: "{{ igw_name }}"
+       register: igw
+    
+    - name: Create security group for EC2
+      ec2_group:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ security_group }}"
+        description: "{{ security_group }}"
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 37529
+            to_port: 37529
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 9000
+            to_port: 9000
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: sg
+
+    - name: Create the ELB target group
+      elb_target_group:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ target_group }}"
+        protocol: http
+        port: 80
+        region: "{{ region }}"
+        vpc_id: "{{ vpc.id }}"
+        state: present
+      register: tg
+
+    - name: Launch new EC2 instances Upgrade to "ec2_instance" module
+      ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ instance_name }}"
+        network:
+          groups: 
+          - "{{ sg.group_id }}"
+        security_groups:
+        - "{{ sg.group_id }}"
+        instance_type: "{{ instance_type }}"
+        volumes:
+        - device_name: /dev/sda1
+          ebs:
+            volume_size: 30
+            delete_on_termination: true
+        image_id: "{{ image }}"
+        wait: true 
+        region: "{{ region }}"
+        key_name: "{{ keypair }}"
+        tags: "{{ infra_tags }}"
+      register: ec2
+
+    - name: Add EC2 instances to inventory
+      add_host:
+        name: "{{ item.public_ip_address }}"
+        groups: remote
+      loop: "{{ ec2.instances }}"
+
+    - name: Wait for SSH to come up
+      wait_for_connection:
+        delay: 60
+        timeout: 120
+      loop: "{{ ec2.instances }}"
+
+    - name: elb target
+      elb_target:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        state: present
+        target_group_name: "{{ target_group }}"
+        region: "{{ region }}"
+        target_id: "{{ item.instance_id }}"
+        target_port: 3000
+      loop: "{{ ec2.instances }}"
+
+    - name: Create the ELB listening on port 80 to 3000 was elb_classic_lb
+      elb_application_lb:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ load_balancer }}"
+        state: present
+        region: "{{ region }}"
+        listeners:
+          - Protocol: HTTP
+            Port: 80
+            DefaultActions:
+              - Type: forward # Required. Only 'forward' is accepted at this time
+                TargetGroupArn: "{{ tg.target_group_arn }}" # Required. The ARN of the target group
+        security_groups:
+        - "{{ sg.group_id }}"
+        subnets:
+        - "{{ subnet_a }}"
+        - "{{ subnet_b }}"
+  #      health_check:
+  #        ping_protocol: http
+  #        ping_port: 80
+  #        ping_path: "/"
+  #        response_timeout: 5
+  #        interval: 10
+  #        unhealthy_threshold: 10
+  #        healthy_threshold: 2
+  #      tags: "{{ infra_tags }}"
+      register: elb
+
+- hosts: remote
+  remote_user: maintuser
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  vars_files:
+    - vars.yml
+    - aws_keys.yml
+  tasks:
+    - name: "Download EPEL RPM"
+      get_url:
+        url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        dest: ./epel-release-latest-7.noarch.rpm
+        mode: 0644
+    - name: Install epel-release 
+      shell: 
+        cmd: sudo rpm -Uvh --replacepkgs ./epel-release-latest-7.noarch.rpm
+        warn: false
+
+    - name: Install docker prerequisites
+      yum:
+        name: 
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - epel-release
+          - libcurl-devel
+          - python
+          - python-devel
+          - python3-devel
+          - python-pip
+          - python2-pip
+          - python-setuptools
+          - nginx
+          - git
+          - libselinux-python
+          - python3
+          - python3-pip
+          - libselinux-python3
+          - python-virtualenv
+        state: present
+        update_cache: yes
+        enablerepo: epel
+        skip_broken: yes
+    - name: Upgrade all packages
+      yum:
+        name: 
+          - '*'
+        state: latest
+    - name: Add Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/centos/gpg
+        dest: /etc/yum.repos.d/docker-gpg
+        mode: 0644
+
+    - name: Configuring docker-ce repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: 0644
+    - name: Install Docker packages
+      yum:
+        name: ['docker-ce','docker-ce-cli']
+        state: present
+    - name: Starting and Enabling Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Stopping auditd service
+      command: /sbin/service auditd stop
+ #[root@ip-172-31-90-28 ~]# lvreduce --resizefs -L 512m VolGroup00/auditVol
+ #Do you want to unmount "/var/log/audit" ? [Y|n] y
+#service auditd stop
+
+    - name: Shrink Volume auditVol
+      lvol:
+        vg: VolGroup00
+        lv: auditVol
+        size: 512m
+        shrink: yes
+        resizefs: yes
+        force: yes
+
+    - name: Extend partition to fill all available space (parted module does not work to resize)
+      shell:
+        cmd: echo -e "resizepart 2 100%\nquit\n"| parted /dev/xvda ---pretend-input-tty
+      become: yes
+    - name: pvresize
+      shell:
+        cmd: pvresize /dev/xvda2
+      become: yes
+
+    - name: Increase Volume varVol
+      lvol:
+        vg: VolGroup00
+        lv: varVol
+        size: 14g
+        resizefs: yes
+        force: yes
+    - name: Increase Volume rootVol
+      lvol:
+        vg: VolGroup00
+        lv: rootVol
+        size: 7g
+        resizefs: yes
+        force: yes
+    - name: Increase Volume homeVol
+      lvol:
+        vg: VolGroup00
+        lv: homeVol
+        size: 3g
+        resizefs: yes
+        force: yes
+
+    - name: Install Docker-compose 
+      shell: 
+        cmd: curl -L "https://github.com/docker/compose/releases/download/2.3.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        warn: false
+
+#    - name: Upgrade pip2 - stuck-maybe dont need
+#      shell: 
+#        cmd: pip install -U pip
+#        warn: false
+
+ #   - name: Pip setup for ansible --skipping
+ #     pip:
+ #       name: 
+ #         - setuptools==44.1.1 # 20.3.1
+ #         - pip==20.3.4 # 20.3.1
+ #         - wheel==0.36.2
+ #         - selinux
+ #       state: latest
+  #      state: present
+  #      extra_args: --disable-pip-version-check --no-cache-dir 
+    - name: Pip setup for python3
+      pip:
+        name:
+          - docker
+          - docker-compose
+        state: latest  
+        executable: /usr/bin/pip3
+    - name: Copy IFotos folder to node
+      copy:
+        src: IFotos/
+        dest: /home/{{ user }}/{{ app_name }}
+
+    - name: Copy IFotos-db folder to node
+      copy:
+        src: IFotos-db/
+        dest: /home/{{ user }}/IFotos-db
+
+    - name: Create network db
+      shell:
+        cmd: docker network create db
+        warn: false
+
+    - name: Build and Run the ifotosdb container
+      shell:
+        cmd: cd IFotos-db && docker build --build-arg AWSACCESSKEYID={{ aws_access_key }} --build-arg AWSSECRETACCESSKEY={{ aws_secret_key }} --no-cache -t ifotosdb . && docker run -p 3306:3306 --net db --name ifotosdb --device /dev/fuse --privileged --detach ifotosdb
+        warn: false
+
+    - name: Build and Run the ifotos app container
+      shell:
+        cmd: cd IFotos && docker build --no-cache -t ifotos . && docker run -p 3000:3000 --net db --name ifotos --detach ifotos
+        warn: false
+
+- hosts: local
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars.yml  
+    - aws_keys.yml
+  tasks:
+    - name: elb target
+      elb_target:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        state: present
+        target_group_name: "{{ target_group }}"
+        region: "{{ region }}"
+        target_id: "{{ item.instance_id }}"
+        target_port: 3000
+      loop: "{{ ec2.instances }}"
+    - name: Check that application is reachable through ELB
+      uri:
+        url: "http://{{ elb.dns_name }}:80"
+
+    - debug:
+        msg: "Website reachable on http://{{ elb.dns_name }}:80"

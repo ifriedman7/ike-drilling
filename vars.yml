@@ -1,0 +1,23 @@
+vpc_name: ike-drilling
+#vpc_id: vpc-00eae63004c72bd15 # change
+vpc_cidr: 10.16.0.0/16
+subnet_cidr: 10.16.0.0/20
+subnet_name: drilling_subnet
+region: us-east-1
+instance_type: t2.micro
+count: 1 # number of EC2 instances
+security_group: SecGroup_drilling # 
+load_balancer: ike-drilling-lb
+image: ami-0d3f1442fb45e08e7 # ami-005f0a3901058a235 # spel-minimal-centos-7-hvm-2021.08.1.x86_64-gp2 #ami-c1cf79bc # 
+keypair: Ike-key1 # EC2 AWS key pair name
+
+
+target_group: ike-drilling-lb-tg
+instance_name: drilling_instance
+infra_tags:
+  app: drilling
+  type: web
+app_name: drilling
+app_exe: drilling/app.py
+user: maintuser
+ansible_python_interpreter: /usr/bin/python2
