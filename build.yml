@@ -37,8 +37,8 @@
         aws_secret_key: "{{ aws_secret_key }}"
         state: "present"
         tags:
-          Name: "{{ igw_name }}"
-       register: igw
+          name: "{{ igw_name }}"
+      register: igw
     
     - name: Create security group for EC2
       ec2_group:
