@@ -13,7 +13,8 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         region: "{{ region }}"
-        filters: "{{ filters }}"
+        filters: 
+          "tag:Name": "{{ instance_name }}"
       register: ec2
     - name: "Gather VPC info"
       ec2_vpc_net_info:
