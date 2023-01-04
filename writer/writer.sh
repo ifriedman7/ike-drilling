@@ -3,7 +3,9 @@
 #which is docker volume /var/bucket:/var/bucket
 coproc ncat -l localhost 37529
 
-while read -r msg; do
+while :
+do
+  read -r msg;
   echo [`date`] $msg >> /var/bucket/drilling.log
 done <&"${COPROC[0]}" 
 
