@@ -229,7 +229,7 @@
         state: directory
         path: /var/bucket
     - name: mkdir for s3fs cache
-        ansible.builtin.file:
+      ansible.builtin.file:
         state: directory
         path: /tmp/bucket-cache
     - name: create pw file
