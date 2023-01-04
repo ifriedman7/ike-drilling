@@ -224,13 +224,15 @@
         state: latest  
         executable: /usr/bin/pip3
         
-    - name: mkdirs for s3fs
+    - name: mkdir for s3fs mount
       ansible.builtin.file: 
         state: directory
         path: /var/bucket
-      ansible.builtin.file:
+    - name: mkdir for s3fs cache
+        ansible.builtin.file:
         state: directory
         path: /tmp/bucket-cache
+    - name: create pw file
       shell: echo {{ aws_access_key }}:{{ aws_secret_key }} > ${HOME}/.passwd-s3fs && chmod 600 ${HOME}/.passwd-s3fs
     - name: Mount S3 bucket
       shell: s3fs drilling-bucket /var/bucket -o use_cache=/tmp/bucket-cache -o passwd_file=${HOME}/.passwd-s3fs -o allow_other
