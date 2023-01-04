@@ -239,4 +239,23 @@
         state: absent
         path: ${HOME}/.passwd-s3fs
 
+    - name: git clone the project
+      shell:
+        cmd: git clone https://github.com/ifriedman7/ike-drilling.git
+
+    - name: Build the reader container
+      shell:
+        cmd: cd ike-drilling/reader && chmod 755 reader.sh && docker build --no-cache -t reader . 
+        warn: false
+
+    - name: Build the writer container
+      shell:
+        cmd: cd ike-drilling/writer && chmod 755 writer.sh && docker build --no-cache -t writer . 
+        warn: false
+
+    - name: load docker-compose -d
+      shell:
+        cmd: cd ${HOME}/ike-drilling && docker-compose -d up
+        warn: false        
+        
 
