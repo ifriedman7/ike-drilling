@@ -1,65 +1,21 @@
 # README
 
-## Goal
+## Description
 
-Deploy a python application (IFotos) to EC2 instances using Ansible
-
-## How does it work ?
-
-- Ansible playbook creates a set of EC2 instances with its associated SG and ELB
-- Python application (Flask) files are copied to EC2 instances
-- The container is built and started using docker-compose
-- A Nginx process is started to redirect incoming traffic from port 80 to the docker container
-- - using port 3000 directly on the ELB - so far
-- Instances are then attached to the ELB
-
-## Prerequisite
-
-- Working ansible installation
-- AWS credentials (access & secret key, ec2 ssh key)
-
-## Setup
-
-### AWS Access Key
-
-- Wrap your AWS credentials in an Ansible Vault file that are expected to contain two variables : `aws_access_key` and `aws_secret_key`
-- The playbooks expect the the Vault file to be named `aws_keys.yml`
-
-```
-ansible-vault create aws_keys.yml
-[type in a password]
-[type in aws_access_key: ...]
-[type in aws_secret_key: ...]
-```
-
-### AWS EC2 SSH key
-
-- Add your EC2 private ssh key in the `ansible.cfg` file :
-
-```
-private_key_file = /Users/myself/key.pem
-```
-
-### Review settings
-
-- Infrastructure settings can be edited in the `vars.yml` file
-  - AWS region, instance type, ...
-
-## Run
-
-- There are two playbook available :
-  - `flask.yml` will provision infrastructure and deploy a containerized Python Flask application
-  - `clean.yml` will cleanup all infrastructure
-- To run theses playbooks, you can use make
-
-```
+Deploy a client/server messaging system in docker-compose environment.
+reader container listens on port 3000 for messages. then it passes the message to writer container on port 37529.
+writer container listens on port 37529 to get the message from the reader container. Then it writes the message to S3 bucket with a timestamp.
+###To build
 make deploy
+###To tear down all resources
 make clean
+###To send a message
+	Find out IP address of reader container
+	docker inspect ike-drilling_reader_1 grep IPAddress
+	echo test message | nc -N 172.18.0.2 3000
+	cat /var/bucket/drilling.log
+	
+
 ```
 
-## What could be done better
 
-- Python application container should be built outside the target instances and pushed to a registry
-- - which is what I did: https://github.com/ifriedman7/IFotos.git
-- Flask built-in application server is not production grade, should be replaced it with a compliant WSGI server
-- - also did

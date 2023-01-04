@@ -257,7 +257,7 @@
 
     - name: load docker-compose
       shell:
-        cmd: cd /home/{{ user }}/ike-drilling && sudo chmod 666 /var/run/docker.sock && docker-compose up -d
+        cmd: cd /home/{{ user }}/ike-drilling && sudo chmod 666 /var/run/docker.sock && /usr/local/bin/docker-compose up -d
         warn: false        
         
 
