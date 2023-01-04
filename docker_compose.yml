@@ -5,7 +5,7 @@ services:
     environment: {}
     ports:
     - "3000:3000"
-    image: dockerhub.cisco.com/vge-docker-staging/smp:20180315044337-4.0.0-2
+    image: reader
     networks:
     - vlan
   writer:
@@ -13,7 +13,7 @@ services:
     environment: {}
     ports:
     - "37529:37529"
-    image: dockerhub.cisco.com/vge-docker-staging/vxb2:20180315134227-4.0.0-12
+    image: writer
     networks:
     - vlan
     volumes:
