@@ -247,12 +247,12 @@
 
     - name: Build the reader container
       shell:
-        cmd: cd ike-drilling/reader && chmod 755 reader.sh && docker build --no-cache -t reader . 
+        cmd: cd ike-drilling/reader && chmod 755 reader.sh && docker build --no-cache -t reader:latest . 
         warn: false
 
     - name: Build the writer container
       shell:
-        cmd: cd ike-drilling/writer && chmod 755 writer.sh && docker build --no-cache -t writer . 
+        cmd: cd ike-drilling/writer && chmod 755 writer.sh && docker build --no-cache -t writer:latest . 
         warn: false
 
     - name: load docker-compose -d

@@ -16,7 +16,7 @@ RUN yum -y install \
 
 #RUN git clone https://github.com/ifriedman7/ike-drilling.git
 #WORKDIR ike-drilling
-COPY reader/reader.sh
+COPY reader/reader.sh .
 
 EXPOSE 3000
 # Set default command

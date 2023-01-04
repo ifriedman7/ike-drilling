@@ -5,7 +5,8 @@ services:
     environment: {}
     ports:
     - "3000:3000"
-    image: reader
+    image: reader:latest
+    restart: always
     networks:
     - vlan
   writer:
@@ -13,14 +14,15 @@ services:
     environment: {}
     ports:
     - "37529:37529"
-    image: writer
+    image: writer:latest
+    restart: always
     networks:
     - vlan
     volumes:
     - /var/bucket:/var/bucket
 
-volumes:
-    drilling-logs: {}
+#volumes:
+#    drilling-logs: {}
 
 networks:
     vlan:
