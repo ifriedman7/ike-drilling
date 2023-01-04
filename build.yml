@@ -225,10 +225,18 @@
         executable: /usr/bin/pip3
         
     - name: mkdirs for s3fs
-      shell: mkdir /var/bucket && mkdir /tmp/bucket-cache && echo {{ aws_access_key }}:{{ aws_secret_key }} > ${HOME}/.passwd-s3fs && chmod 600 ${HOME}/.passwd-s3fs
+      ansible.builtin.file: 
+        state: directory
+        path: /var/bucket
+      ansible.builtin.file:
+        state: directory
+        path: /tmp/bucket-cache
+      shell: echo {{ aws_access_key }}:{{ aws_secret_key }} > ${HOME}/.passwd-s3fs && chmod 600 ${HOME}/.passwd-s3fs
     - name: Mount S3 bucket
       shell: s3fs drilling-bucket /var/bucket -o use_cache=/tmp/bucket-cache -o passwd_file=${HOME}/.passwd-s3fs -o allow_other
     - name: Delete S3 passwd file
-      shell: rm -f ${HOME}/.passwd-s3fs
-                
+      ansible.builtin.file: 
+        state: absent
+        path: ${HOME}/.passwd-s3fs
+
 
