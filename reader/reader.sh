@@ -3,6 +3,6 @@
 coproc ncat -l localhost 3000
 
 while read -r msg; do
-  ncat localhost 37529 < echo $msg
+  echo $msg | nc localhost 37529
 done <&"${COPROC[0]}"
 

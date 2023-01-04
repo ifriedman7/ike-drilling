@@ -4,6 +4,6 @@
 coproc ncat -l localhost 37529
 
 while read -r msg; do
-  echo [`date`] $msg
-done <&"${COPROC[0]}" >> /var/bucket/drilling.log
+  echo [`date`] $msg >> /var/bucket/drilling.log
+done <&"${COPROC[0]}" 
 
