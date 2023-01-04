@@ -7,8 +7,6 @@ services:
     - "3000:3000"
     image: reader:latest
     restart: always
-#    networks:
-#    - vlan
   writer:
     hostname: writer
     environment: {}
@@ -16,14 +14,6 @@ services:
     - "37529:37529"
     image: writer:latest
     restart: always
-#    networks:
-#    - vlan
     volumes:
     - /var/bucket:/var/bucket
 
-#volumes:
-#    drilling-logs: {}
-
-#networks:
-#    vlan:
-#       driver: bridge
