@@ -14,12 +14,14 @@ RUN yum -y install \
            nmap-ncat \
            && yum clean all
 
-#RUN git clone https://github.com/ifriedman7/ike-drilling.git
-#WORKDIR ike-drilling
-COPY reader.sh .
+RUN git clone https://github.com/ifriedman7/ike-drilling.git
 
+#COPY reader.sh .
+RUN chmod +x /ike-drilling/reader/reader.sh
+RUN export PATH="/ike-drilling:$PATH"
 EXPOSE 3000
 # Set default command
-#ENTRYPOINT [ "" ]
-CMD [ "reader.sh" ]
+#ENTRYPOINT [ "reader.sh" ]
+CMD [ "/ike-drilling/reader/reader.sh" ]
+
 

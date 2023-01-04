@@ -255,9 +255,9 @@
         cmd: cd ike-drilling/writer && chmod 755 writer.sh && docker build --no-cache -t writer:latest . 
         warn: false
 
-    - name: load docker-compose -d
+    - name: load docker-compose
       shell:
-        cmd: cd ${HOME}/ike-drilling && docker-compose -d up
+        cmd: cd /home/{{ user }}/ike-drilling && sudo chmod 666 /var/run/docker.sock && docker-compose up -d
         warn: false        
         
 

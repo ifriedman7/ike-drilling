@@ -13,12 +13,13 @@ RUN yum -y install \
            nmap-ncat \
            && yum clean all
 
-#RUN git clone https://github.com/ifriedman7/ike-drilling.git
-#WORKDIR ike-drilling
-COPY writer.sh .
+RUN git clone https://github.com/ifriedman7/ike-drilling.git
 
+#COPY writer.sh .
+RUN chmod +x /ike-drilling/writer/writer.sh
+RUN export PATH="/ike-drilling:$PATH"
 EXPOSE 37529
 # Set default command
-#ENTRYPOINT [ "" ]
-CMD [ "writer.sh" ]
+#ENTRYPOINT [ "writer.sh" ]
+CMD [ "/ike-drilling/writer/writer.sh" ]
 
