@@ -10,10 +10,10 @@ make deploy
 ### To tear down all resources
 make clean
 ### To send a message
-Find out IP address of reader container
-docker inspect ike-drilling_reader_1 | grep IPAddress
-echo test message | nc -N 172.18.0.2 3000
-cat /var/bucket/drilling.log
++ Find out IP address of reader container
++ docker inspect ike-drilling_reader_1 | grep IPAddress
++ echo test message | nc -N 172.18.0.2 3000
++ cat /var/bucket/drilling.log
 
 
 ```
