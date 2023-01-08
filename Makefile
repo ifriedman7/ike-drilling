@@ -1,10 +1,10 @@
 
-test_container: 
-	@echo "Testing container"
-	@cd python && docker-compose up -d --build
-	@sleep 5
+test: 
+	@echo "Testing message"
 	curl localhost:37529 -so /dev/null -w "%{http_code}"
-	@cd python && docker-compose down
+	docker inspect ike-drilling_reader_1 | grep IPAddress
+	echo test message | nc -N 172.18.0.2 3000
+	tail /var/bucket/drilling.log
 
 deploy:
 	@echo "Building VPC"
