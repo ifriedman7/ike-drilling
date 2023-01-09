@@ -1,5 +1,4 @@
 FROM centos:centos7.9.2009
-MAINTAINER The CentOS Project <cloud-ops@centos.org
 #Reader container#build from ike-drilling/reader context
 ENV container docker
 
